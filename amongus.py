@@ -24,58 +24,67 @@ mainMap = [
     list("                              +-------------------+------------------+"),
 ]
 
-#variables
+# variables
 y = 1
 x = 1
 cont = True
-xrange = range(8)
-yrange = range(8)
 
-#functions 
+# top-left corner of the 8x8 viewport
+view_x = 0
+view_y = 0
+
+
 def viewpoint(direction):
-    # check direction | check we could move the range | check if centered
-    if direction == "up" and yrange[0] != 0 and (yrange[0]+3 == y or yrange[0]+4 == y):
-        for index in range(8):
-            yrange[index] = yrange[index] - 1
-    elif direction == "down" and yrange[7] != len(mainMap)-1 and (yrange[0]+3 == y or yrange[0]+4 == y):
-        for index in range(8):
-            yrange[index] = yrange[index] + 1
-    elif direction == "left" and xrange[0] != 0 and (xrange[0]+3 == y or xrange[0]+4 == y):
-        for index in range(8):
-            xrange[index] = xrange[index] - 1
-    elif direction == "right" and xrange[7] != len(mainMap[0])-1 and (xrange[0]+3 == y or xrange[0]+4 == y):
-        for index in range(8):
-            xrange[index] = xrange[index] + 1
+    #refers global variables and ensures changes made to them
+    global view_x, view_y, x, y
+
+    #vertical camera movement (if the y is not within the view bounds, we shift the bounds)
+    if y < view_y + 3:
+        view_y = max(0, y - 3)
+    elif y > view_y + 4:
+        view_y = min(len(mainMap) - 8, y - 4)
+
+    #horizontal camera movement
+    if x < view_x + 3:
+        view_x = max(0, x - 3)
+    elif x > view_x + 4:
+        view_x = min(len(mainMap[0]) - 8, x - 4)
 
 
 while cont:
-    #initializing the map
-    for ya in yrange:
-        for xa in xrange:
+    #initialize 8x8 viewpoint
+    print("&&&&&&&&&&&&&&&&&&&&")
+    for ya in range(view_y, view_y + 8):
+        for xa in range(view_x, view_x + 8):
             print(mainMap[ya][xa], end=" ")
-        print("")
-    #waiting for input
+        print()
+
     movement = input()
-    #basic movement
-    if movement == "w" and y > 0 and mainMap[y-1][x] == " ":
-        mainMap[y-1][x] = mainMap[y][x]
+
+    #check: movement type | we can move | empty space
+    if movement == "w" and y > 0 and mainMap[y - 1][x] == " ":
+        mainMap[y - 1][x] = mainMap[y][x]
         mainMap[y][x] = " "
         y -= 1
         viewpoint("up")
-    elif movement == "a" and x > 0 and mainMap[y][x-1] == " ":
-        mainMap[y][x-1] = mainMap[y][x]
+
+    elif movement == "a" and x > 0 and mainMap[y][x - 1] == " ":
+        mainMap[y][x - 1] = mainMap[y][x]
         mainMap[y][x] = " "
         x -= 1
         viewpoint("left")
-    elif movement == "s" and y < 7 and mainMap[y+1][x] == " ":
-        mainMap[y+1][x] = mainMap[y][x]
+
+    elif movement == "s" and y < len(mainMap) - 1 and mainMap[y + 1][x] == " ":
+        mainMap[y + 1][x] = mainMap[y][x]
         mainMap[y][x] = " "
         y += 1
         viewpoint("down")
-    elif movement == "d" and x < 7 and mainMap[y][x+1] == " ":
-        mainMap[y][x+1] = mainMap[y][x]
+
+    elif movement == "d" and x < len(mainMap[0]) - 1 and mainMap[y][x + 1] == " ":
+        mainMap[y][x + 1] = mainMap[y][x]
         mainMap[y][x] = " "
         x += 1
         viewpoint("right")
+
     elif movement == "q":
         cont = False
