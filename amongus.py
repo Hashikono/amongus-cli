@@ -3,6 +3,7 @@ import sys
 import time
 import msvcrt
 import ctypes
+import random
 
 def enable_windows_ansi():
     #initializing a workable variable
@@ -112,9 +113,12 @@ mainMap = [
     list("                              +-------------------+------------------+"),
 ]
 
-# variables
-y = 1
-x = 1
+# variables (coordinate) format: [y,x]
+player = [1,1]
+npc1 = [1,68]
+npc2 = [1,67]
+npc3 = [1,66]
+
 cont = True
 
 # top-left corner of the 8x8 viewport
@@ -122,23 +126,27 @@ view_x = 0
 view_y = 0
 
 #variable for player
-mainMap[y][x] = "P"
+mainMap[player[0]][player[1]] = "P"
+mainMap[npc1[0]][npc1[1]] = "A"
+mainMap[npc2[0]][npc2[1]] = "B"
+mainMap[npc3[0]][npc3[1]] = "C"
+
 
 def viewpoint(direction):
     #refers global variables and ensures changes made to them
-    global view_x, view_y, x, y
+    global view_x, view_y, player
 
     #vertical camera movement (if the y is not within the view bounds, we shift the bounds)
-    if y < view_y + 3:
-        view_y = max(0, y - 3)
-    elif y > view_y + 4:
-        view_y = min(len(mainMap) - 8, y - 4)
+    if player[0] < view_y + 3:
+        view_y = max(0, player[0] - 3)
+    elif player[0] > view_y + 4:
+        view_y = min(len(mainMap) - 8, player[0] - 4)
 
     #horizontal camera movement
-    if x < view_x + 3:
-        view_x = max(0, x - 3)
-    elif x > view_x + 4:
-        view_x = min(len(mainMap[0]) - 8, x - 4)
+    if player[1] < view_x + 3:
+        view_x = max(0, player[1] - 3)
+    elif player[1] > view_x + 4:
+        view_x = min(len(mainMap[0]) - 8, player[1] - 4)
 
 #applies terminal update to the game
 def draw_view():
@@ -151,6 +159,34 @@ def draw_view():
         # .ljust(60) makes sure old longer lines get overwritten (erasing old print statements)
         print(" ".join(row).ljust(60))
     flush()
+
+#NPC random movement
+def npc_movement(npc):
+    #random variables
+    direction = random.randint(1, 4)
+    spaces = random.randint(1,1)
+    #deciding movements
+    for _ in range(spaces):
+        if direction == 1 and npc[0] > 0 and mainMap[npc[0] - 1][npc[1]] == " ":
+            mainMap[npc[0] - 1][npc[1]] = mainMap[npc[0]][npc[1]]
+            mainMap[npc[0]][npc[1]] = " "
+            npc[0] -= 1
+
+        elif direction == 2 and npc[1] > 0 and mainMap[npc[0]][npc[1] - 1] == " ":
+            mainMap[npc[0]][npc[1] - 1] = mainMap[npc[0]][npc[1]]
+            mainMap[npc[0]][npc[1]] = " "
+            npc[1] -= 1
+
+        elif direction == 3 and npc[0] < len(mainMap) - 1 and mainMap[npc[0] + 1][npc[1]] == " ":
+            mainMap[npc[0] + 1][npc[1]] = mainMap[npc[0]][npc[1]]
+            mainMap[npc[0]][npc[1]] = " "
+            npc[0] += 1
+
+        elif direction == 4 and npc[1] < len(mainMap[0]) - 1 and mainMap[npc[0]][npc[1] + 1] == " ":
+            mainMap[npc[0]][npc[1] + 1] = mainMap[npc[0]][npc[1]]
+            mainMap[npc[0]][npc[1]] = " "
+            npc[1] += 1
+
     
 enable_windows_ansi()
 ansi_clear_screen()
@@ -165,34 +201,41 @@ try:
 
 
         #check: movement type | we can move | empty space
-        if movement == "w" and y > 0 and mainMap[y - 1][x] == " ":
-            mainMap[y - 1][x] = mainMap[y][x]
-            mainMap[y][x] = " "
-            y -= 1
+        if movement == "w" and player[0] > 0 and mainMap[player[0] - 1][player[1]] == " ":
+            mainMap[player[0] - 1][player[1]] = mainMap[player[0]][player[1]]
+            mainMap[player[0]][player[1]] = " "
+            player[0] -= 1
             viewpoint("up")
 
-        elif movement == "a" and x > 0 and mainMap[y][x - 1] == " ":
-            mainMap[y][x - 1] = mainMap[y][x]
-            mainMap[y][x] = " "
-            x -= 1
+        elif movement == "a" and player[1] > 0 and mainMap[player[0]][player[1] - 1] == " ":
+            mainMap[player[0]][player[1] - 1] = mainMap[player[0]][player[1]]
+            mainMap[player[0]][player[1]] = " "
+            player[1] -= 1
             viewpoint("left")
 
-        elif movement == "s" and y < len(mainMap) - 1 and mainMap[y + 1][x] == " ":
-            mainMap[y + 1][x] = mainMap[y][x]
-            mainMap[y][x] = " "
-            y += 1
+        elif movement == "s" and player[0] < len(mainMap) - 1 and mainMap[player[0] + 1][player[1]] == " ":
+            mainMap[player[0] + 1][player[1]] = mainMap[player[0]][player[1]]
+            mainMap[player[0]][player[1]] = " "
+            player[0] += 1
             viewpoint("down")
 
-        elif movement == "d" and x < len(mainMap[0]) - 1 and mainMap[y][x + 1] == " ":
-            mainMap[y][x + 1] = mainMap[y][x]
-            mainMap[y][x] = " "
-            x += 1
+        elif movement == "d" and player[1] < len(mainMap[0]) - 1 and mainMap[player[0]][player[1] + 1] == " ":
+            mainMap[player[0]][player[1] + 1] = mainMap[player[0]][player[1]]
+            mainMap[player[0]][player[1]] = " "
+            player[1] += 1
             viewpoint("right")
 
         elif movement == "q":
             cont = False
-
+        
+        #npc movement
+        chanc = random.randint(1,8)
+        if (chanc == 1):
+            npcs = [npc1, npc2, npc3]
+            for npc in npcs:
+                npc_movement(npc)
         time.sleep(0.03)
 finally:
     ansi_show_cursor()
     ansi_move_cursor(15, 1)
+    print(npc1)
