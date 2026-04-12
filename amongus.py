@@ -4,6 +4,7 @@ import time
 import msvcrt
 import ctypes
 import random
+import threading
 
 def enable_windows_ansi():
     #initializing a workable variable
@@ -113,11 +114,74 @@ mainMap = [
     list("                              +-------------------+------------------+"),
 ]
 
+class Player:
+    def __init__(self, name, y_coor, x_coor):
+        self.y = y_coor
+        self.x = x_coor
+        self.name = name
+
+    def viewpoint(direction):
+    #refers global variables and ensures changes made to them
+        global view_x, view_y, player
+
+        #vertical camera movement (if the y is not within the view bounds, we shift the bounds)
+        if player[0] < view_y + 3:
+            view_y = max(0, player[0] - 3)
+        elif player[0] > view_y + 4:
+            view_y = min(len(mainMap) - 8, player[0] - 4)
+
+        #horizontal camera movement
+        if player[1] < view_x + 3:
+            view_x = max(0, player[1] - 3)
+        elif player[1] > view_x + 4:
+            view_x = min(len(mainMap[0]) - 8, player[1] - 4)
+
+    #setting coordinates
+
+class NPC:
+    def __init__(self, name, y_coor, x_coor):
+        self.y = y_coor
+        self.x = x_coor
+        self.name = name
+
+    #NPC random movement
+    def npc_movement():
+        #random variables
+        direction = random.randint(1, 4)
+        spaces = random.randint(1,3)
+        #deciding movements
+        for _ in range(spaces):
+            if direction == 1 and npc[0] > 0 and mainMap[npc[0] - 1][npc[1]] == " ":
+                mainMap[npc[0] - 1][npc[1]] = mainMap[npc[0]][npc[1]]
+                mainMap[npc[0]][npc[1]] = " "
+                npc[0] -= 1
+
+            elif direction == 2 and npc[1] > 0 and mainMap[npc[0]][npc[1] - 1] == " ":
+                mainMap[npc[0]][npc[1] - 1] = mainMap[npc[0]][npc[1]]
+                mainMap[npc[0]][npc[1]] = " "
+                npc[1] -= 1
+
+            elif direction == 3 and npc[0] < len(mainMap) - 1 and mainMap[npc[0] + 1][npc[1]] == " ":
+                mainMap[npc[0] + 1][npc[1]] = mainMap[npc[0]][npc[1]]
+                mainMap[npc[0]][npc[1]] = " "
+                npc[0] += 1
+
+            elif direction == 4 and npc[1] < len(mainMap[0]) - 1 and mainMap[npc[0]][npc[1] + 1] == " ":
+                mainMap[npc[0]][npc[1] + 1] = mainMap[npc[0]][npc[1]]
+                mainMap[npc[0]][npc[1]] = " "
+                npc[1] += 1
+    
+    #setting coordinates
+    
+
+
 # variables (coordinate) format: [y,x]
-player = [1,1]
-npc1 = [1,68]
-npc2 = [1,67]
-npc3 = [1,66]
+player = Player("P",1,1)
+npc1 = NPC("A",1,68)
+npc2 = NPC("B",1,67)
+npc3 = NPC("C",1,66)
+
+#NOTE TO SELF, FIX EVERYTHING BELOW THIS LINE AND THE FUNCTIONS IN THE CLASSES ARE BROKEN RIGHT NOW
 
 cont = True
 
@@ -132,22 +196,6 @@ mainMap[npc2[0]][npc2[1]] = "B"
 mainMap[npc3[0]][npc3[1]] = "C"
 
 
-def viewpoint(direction):
-    #refers global variables and ensures changes made to them
-    global view_x, view_y, player
-
-    #vertical camera movement (if the y is not within the view bounds, we shift the bounds)
-    if player[0] < view_y + 3:
-        view_y = max(0, player[0] - 3)
-    elif player[0] > view_y + 4:
-        view_y = min(len(mainMap) - 8, player[0] - 4)
-
-    #horizontal camera movement
-    if player[1] < view_x + 3:
-        view_x = max(0, player[1] - 3)
-    elif player[1] > view_x + 4:
-        view_x = min(len(mainMap[0]) - 8, player[1] - 4)
-
 #applies terminal update to the game
 def draw_view():
     ansi_move_cursor(1,1)
@@ -159,33 +207,6 @@ def draw_view():
         # .ljust(60) makes sure old longer lines get overwritten (erasing old print statements)
         print(" ".join(row).ljust(60))
     flush()
-
-#NPC random movement
-def npc_movement(npc):
-    #random variables
-    direction = random.randint(1, 4)
-    spaces = random.randint(1,1)
-    #deciding movements
-    for _ in range(spaces):
-        if direction == 1 and npc[0] > 0 and mainMap[npc[0] - 1][npc[1]] == " ":
-            mainMap[npc[0] - 1][npc[1]] = mainMap[npc[0]][npc[1]]
-            mainMap[npc[0]][npc[1]] = " "
-            npc[0] -= 1
-
-        elif direction == 2 and npc[1] > 0 and mainMap[npc[0]][npc[1] - 1] == " ":
-            mainMap[npc[0]][npc[1] - 1] = mainMap[npc[0]][npc[1]]
-            mainMap[npc[0]][npc[1]] = " "
-            npc[1] -= 1
-
-        elif direction == 3 and npc[0] < len(mainMap) - 1 and mainMap[npc[0] + 1][npc[1]] == " ":
-            mainMap[npc[0] + 1][npc[1]] = mainMap[npc[0]][npc[1]]
-            mainMap[npc[0]][npc[1]] = " "
-            npc[0] += 1
-
-        elif direction == 4 and npc[1] < len(mainMap[0]) - 1 and mainMap[npc[0]][npc[1] + 1] == " ":
-            mainMap[npc[0]][npc[1] + 1] = mainMap[npc[0]][npc[1]]
-            mainMap[npc[0]][npc[1]] = " "
-            npc[1] += 1
 
     
 enable_windows_ansi()
@@ -238,4 +259,3 @@ try:
 finally:
     ansi_show_cursor()
     ansi_move_cursor(15, 1)
-    print(npc1)
