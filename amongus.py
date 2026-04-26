@@ -86,8 +86,6 @@ def poll_key():
 
     return None
 
-
-
 #Among us CLI 8x8 grid - autoupdating
 mainMap = [
     list("+----------------------+----------------------+----------------------+"),
@@ -119,143 +117,211 @@ class Player:
         self.y = y_coor
         self.x = x_coor
         self.name = name
+        self.role = "imposter" #BY DEFAULT WE ARE THE IMPOSTER
 
-    def viewpoint(direction):
-    #refers global variables and ensures changes made to them
-        global view_x, view_y, player
+    def move(self, direction, game_map):
+        #Move the player in the given direction
+        new_y, new_x = self.y, self.x
+        
+        if direction == "up":
+            new_y -= 1
+        elif direction == "down":
+            new_y += 1
+        elif direction == "left":
+            new_x -= 1
+        elif direction == "right":
+            new_x += 1
+        
+        # Check boundaries and collision
+        if (new_y >= 0 and new_y < len(game_map) and 
+            new_x >= 0 and new_x < len(game_map[0]) and 
+            (game_map[new_y][new_x] == " " or 
+            (game_map[new_y][new_x] in characters and self.role == "imposter"))):
+            
+            if (game_map[new_y][new_x] in characters and self.role == "imposter"): 
+                self.can_kill(game_map, game_map[new_y][new_x])
 
-        #vertical camera movement (if the y is not within the view bounds, we shift the bounds)
-        if player[0] < view_y + 3:
-            view_y = max(0, player[0] - 3)
-        elif player[0] > view_y + 4:
-            view_y = min(len(mainMap) - 8, player[0] - 4)
-
-        #horizontal camera movement
-        if player[1] < view_x + 3:
-            view_x = max(0, player[1] - 3)
-        elif player[1] > view_x + 4:
-            view_x = min(len(mainMap[0]) - 8, player[1] - 4)
-
-    #setting coordinates
+            # Clear old position
+            game_map[self.y][self.x] = " "
+            # Move to new position
+            self.y, self.x = new_y, new_x
+            # Place name at new position
+            game_map[self.y][self.x] = self.name
+            return True
+        return False
+    
+    def can_kill(self, game_map, npcs):
+        #checking every direction
+        print(npcs)
+            
+        
 
 class NPC:
-    def __init__(self, name, y_coor, x_coor):
+    def __init__(self, name, y_coor, x_coor, move_interval):
         self.y = y_coor
         self.x = x_coor
         self.name = name
-
-    #NPC random movement
-    def npc_movement():
-        #random variables
-        direction = random.randint(1, 4)
-        spaces = random.randint(1,3)
-        #deciding movements
-        for _ in range(spaces):
-            if direction == 1 and npc[0] > 0 and mainMap[npc[0] - 1][npc[1]] == " ":
-                mainMap[npc[0] - 1][npc[1]] = mainMap[npc[0]][npc[1]]
-                mainMap[npc[0]][npc[1]] = " "
-                npc[0] -= 1
-
-            elif direction == 2 and npc[1] > 0 and mainMap[npc[0]][npc[1] - 1] == " ":
-                mainMap[npc[0]][npc[1] - 1] = mainMap[npc[0]][npc[1]]
-                mainMap[npc[0]][npc[1]] = " "
-                npc[1] -= 1
-
-            elif direction == 3 and npc[0] < len(mainMap) - 1 and mainMap[npc[0] + 1][npc[1]] == " ":
-                mainMap[npc[0] + 1][npc[1]] = mainMap[npc[0]][npc[1]]
-                mainMap[npc[0]][npc[1]] = " "
-                npc[0] += 1
-
-            elif direction == 4 and npc[1] < len(mainMap[0]) - 1 and mainMap[npc[0]][npc[1] + 1] == " ":
-                mainMap[npc[0]][npc[1] + 1] = mainMap[npc[0]][npc[1]]
-                mainMap[npc[0]][npc[1]] = " "
-                npc[1] += 1
+        self.move_interval = move_interval
+        self.thread = None
+        self.role = "crewmate"
+        self.alive = True
+        
     
-    #setting coordinates
+    def move_randomly(self, game_map):
+        directions = ["up", "down", "left", "right"]
+        random.shuffle(directions)
+        
+        for direction in directions:
+            new_y, new_x = self.y, self.x
+            
+            if direction == "up":
+                new_y -= 1
+            elif direction == "down":
+                new_y += 1
+            elif direction == "left":
+                new_x -= 1
+            elif direction == "right":
+                new_x += 1
+            
+            # Check boundaries and collision
+            if (new_y >= 0 and new_y < len(game_map) and 
+                new_x >= 0 and new_x < len(game_map[0]) and 
+                game_map[new_y][new_x] == " "):
+                
+                # Clear old position
+                game_map[self.y][self.x] = " "
+                # Move to new position
+                self.y, self.x = new_y, new_x
+                # Place name at new position
+                game_map[self.y][self.x] = self.name
+                return True
+        return False
     
+    def run(self, game_map, stop_event):
+        while not stop_event.is_set():
+            # Random chance to move (approximately 30% chance each cycle)
+            if random.random() < 0.3:
+                self.move_randomly(game_map)
+            time.sleep(self.move_interval)
+    
+    def start_thread(self, game_map, stop_event):
+        # yyyyStart the NPC in a separate thread
+        self.thread = threading.Thread(target=self.run, args=(game_map, stop_event))
+        self.thread.daemon = True
+        self.thread.start()
+        return self.thread
 
+def viewpoint(player, view_x, view_y, game_map):
+    #vertical camera movement
+    if player.y < view_y + 3:
+        view_y = max(0, player.y - 3)
+    elif player.y > view_y + 4:
+        view_y = min(len(game_map) - 8, player.y - 4)
 
-# variables (coordinate) format: [y,x]
-player = Player("P",1,1)
-npc1 = NPC("A",1,68)
-npc2 = NPC("B",1,67)
-npc3 = NPC("C",1,66)
+    #horizontal camera movement
+    if player.x < view_x + 3:
+        view_x = max(0, player.x - 3)
+    elif player.x > view_x + 4:
+        view_x = min(len(game_map[0]) - 8, player.x - 4)
+    
+    return view_x, view_y
 
-#NOTE TO SELF, FIX EVERYTHING BELOW THIS LINE AND THE FUNCTIONS IN THE CLASSES ARE BROKEN RIGHT NOW
-
-cont = True
-
-# top-left corner of the 8x8 viewport
-view_x = 0
-view_y = 0
-
-#variable for player
-mainMap[player[0]][player[1]] = "P"
-mainMap[npc1[0]][npc1[1]] = "A"
-mainMap[npc2[0]][npc2[1]] = "B"
-mainMap[npc3[0]][npc3[1]] = "C"
-
-
-#applies terminal update to the game
-def draw_view():
-    ansi_move_cursor(1,1)
+def draw_view(view_x, view_y, game_map):
+    ansi_move_cursor(1, 1)
     #initialize 8x8 viewpoint
-    for ya in range(view_y, view_y + 8):
+    for ya in range(view_y, min(view_y + 8, len(game_map))):
         row = []
-        for xa in range(view_x, view_x + 8):
-            row.append(mainMap[ya][xa])
-        # .ljust(60) makes sure old longer lines get overwritten (erasing old print statements)
+        for xa in range(view_x, min(view_x + 8, len(game_map[0]))):
+            row.append(game_map[ya][xa])
+        # .ljust(60) makes sure old longer lines get overwritten
         print(" ".join(row).ljust(60))
     flush()
 
+
+characters = ["P", "A", "B", "C", "D"]
+def initialize_game():
+    # Create player and NPCs
+    player = Player("P", 1, 1)
+    npc1 = NPC("A", 1, 68, 0.15)
+    npc2 = NPC("B", 1, 67, 0.12)
+    npc3 = NPC("C", 1, 66, 0.09)
+    npc4 = NPC("D", 1, 65, 1)
     
-enable_windows_ansi()
-ansi_clear_screen()
-ansi_hide_cursor()
+    # Clear the map of any old names (just in case)
+    for y in range(len(mainMap)):
+        for x in range(len(mainMap[0])):
+            if mainMap[y][x] in characters:
+                mainMap[y][x] = " "
+    
+    # Place characters on map
+    mainMap[player.y][player.x] = player.name
+    mainMap[npc1.y][npc1.x] = npc1.name
+    mainMap[npc2.y][npc2.x] = npc2.name
+    mainMap[npc3.y][npc3.x] = npc3.name
+    mainMap[npc4.y][npc4.x] = npc4.name
+    
+    return player, [npc1, npc2, npc3, npc4]
 
-try:
-    while cont:
-        #updates the view
-        draw_view()
-        #check for arrow keys
-        movement = poll_key()
-
-
-        #check: movement type | we can move | empty space
-        if movement == "w" and player[0] > 0 and mainMap[player[0] - 1][player[1]] == " ":
-            mainMap[player[0] - 1][player[1]] = mainMap[player[0]][player[1]]
-            mainMap[player[0]][player[1]] = " "
-            player[0] -= 1
-            viewpoint("up")
-
-        elif movement == "a" and player[1] > 0 and mainMap[player[0]][player[1] - 1] == " ":
-            mainMap[player[0]][player[1] - 1] = mainMap[player[0]][player[1]]
-            mainMap[player[0]][player[1]] = " "
-            player[1] -= 1
-            viewpoint("left")
-
-        elif movement == "s" and player[0] < len(mainMap) - 1 and mainMap[player[0] + 1][player[1]] == " ":
-            mainMap[player[0] + 1][player[1]] = mainMap[player[0]][player[1]]
-            mainMap[player[0]][player[1]] = " "
-            player[0] += 1
-            viewpoint("down")
-
-        elif movement == "d" and player[1] < len(mainMap[0]) - 1 and mainMap[player[0]][player[1] + 1] == " ":
-            mainMap[player[0]][player[1] + 1] = mainMap[player[0]][player[1]]
-            mainMap[player[0]][player[1]] = " "
-            player[1] += 1
-            viewpoint("right")
-
-        elif movement == "q":
-            cont = False
+def main():
+    # Enable ANSI and setup terminal
+    enable_windows_ansi()
+    ansi_clear_screen()
+    ansi_hide_cursor()
+    
+    # Initialize game
+    player, npcs = initialize_game()
+    
+    # Camera position
+    view_x = 0
+    view_y = 0
+    
+    # Stop event for NPC threads
+    stop_event = threading.Event()
+    
+    # Start NPC threads
+    npc_threads = []
+    for npc in npcs:
+        thread = npc.start_thread(mainMap, stop_event)
+        npc_threads.append(thread)
+    
+    cont = True
+    
+    try:
+        while cont:
+            # Update camera position
+            view_x, view_y = viewpoint(player, view_x, view_y, mainMap)
+            
+            # Draw the view
+            draw_view(view_x, view_y, mainMap)
+            
+            # Check for player input
+            movement = poll_key()
+            
+            # Handle player movement
+            if movement == "q":
+                cont = False
+            elif movement == "w":
+                player.move("up", mainMap)
+            elif movement == "s":
+                player.move("down", mainMap)
+            elif movement == "a":
+                player.move("left", mainMap)
+            elif movement == "d":
+                player.move("right", mainMap)
+            
+            # Small delay to control frame rate
+            time.sleep(0.03)
+    
+    finally:
+        # Clean up
+        stop_event.set()  # Signal all NPC threads to stop
         
-        #npc movement
-        chanc = random.randint(1,8)
-        if (chanc == 1):
-            npcs = [npc1, npc2, npc3]
-            for npc in npcs:
-                npc_movement(npc)
-        time.sleep(0.03)
-finally:
-    ansi_show_cursor()
-    ansi_move_cursor(15, 1)
+        # Wait for threads to finish (with timeout)
+        for thread in npc_threads:
+            thread.join(timeout=0.5)
+        
+        ansi_show_cursor()
+        ansi_move_cursor(25, 1)
+
+if __name__ == "__main__":
+    main()
