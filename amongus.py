@@ -118,6 +118,7 @@ class Player:
         self.x = x_coor
         self.name = name
         self.role = "imposter" #BY DEFAULT WE ARE THE IMPOSTER
+        self.alive = True
 
     def move(self, direction, game_map):
         #Move the player in the given direction
@@ -139,7 +140,7 @@ class Player:
             (game_map[new_y][new_x] in characters and self.role == "imposter"))):
             
             if (game_map[new_y][new_x] in characters and self.role == "imposter"): 
-                self.can_kill(game_map, game_map[new_y][new_x])
+                self.can_kill(game_map[new_y][new_x])
 
             # Clear old position
             game_map[self.y][self.x] = " "
@@ -150,9 +151,11 @@ class Player:
             return True
         return False
     
-    def can_kill(self, game_map, npcs):
-        #checking every direction
-        print(npcs)
+    def can_kill(self, npcs):
+        for n in npcs_list:
+            if n.role == npcs:
+                n.alive = False
+        
             
         
 
@@ -171,30 +174,31 @@ class NPC:
         directions = ["up", "down", "left", "right"]
         random.shuffle(directions)
         
-        for direction in directions:
-            new_y, new_x = self.y, self.x
-            
-            if direction == "up":
-                new_y -= 1
-            elif direction == "down":
-                new_y += 1
-            elif direction == "left":
-                new_x -= 1
-            elif direction == "right":
-                new_x += 1
-            
-            # Check boundaries and collision
-            if (new_y >= 0 and new_y < len(game_map) and 
-                new_x >= 0 and new_x < len(game_map[0]) and 
-                game_map[new_y][new_x] == " "):
+        if self.alive == True:
+            for direction in directions:
+                new_y, new_x = self.y, self.x
                 
-                # Clear old position
-                game_map[self.y][self.x] = " "
-                # Move to new position
-                self.y, self.x = new_y, new_x
-                # Place name at new position
-                game_map[self.y][self.x] = self.name
-                return True
+                if direction == "up":
+                    new_y -= 1
+                elif direction == "down":
+                    new_y += 1
+                elif direction == "left":
+                    new_x -= 1
+                elif direction == "right":
+                    new_x += 1
+                
+                # Check boundaries and collision
+                if (new_y >= 0 and new_y < len(game_map) and 
+                    new_x >= 0 and new_x < len(game_map[0]) and 
+                    game_map[new_y][new_x] == " "):
+                    
+                    # Clear old position
+                    game_map[self.y][self.x] = " "
+                    # Move to new position
+                    self.y, self.x = new_y, new_x
+                    # Place name at new position
+                    game_map[self.y][self.x] = self.name
+                    return True
         return False
     
     def run(self, game_map, stop_event):
@@ -210,6 +214,11 @@ class NPC:
         self.thread.daemon = True
         self.thread.start()
         return self.thread
+    
+    def can_kill(self, charact):
+        for n in npcs_list:
+            if n.role == charact:
+                n.alive = False
 
 def viewpoint(player, view_x, view_y, game_map):
     #vertical camera movement
@@ -262,6 +271,7 @@ def initialize_game():
     
     return player, [npc1, npc2, npc3, npc4]
 
+npcs_list = [];
 def main():
     # Enable ANSI and setup terminal
     enable_windows_ansi()
@@ -269,7 +279,7 @@ def main():
     ansi_hide_cursor()
     
     # Initialize game
-    player, npcs = initialize_game()
+    player, npcs_list = initialize_game()
     
     # Camera position
     view_x = 0
@@ -280,7 +290,7 @@ def main():
     
     # Start NPC threads
     npc_threads = []
-    for npc in npcs:
+    for npc in npcs_list:
         thread = npc.start_thread(mainMap, stop_event)
         npc_threads.append(thread)
     
