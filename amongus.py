@@ -202,7 +202,7 @@ class NPC:
         return False
     
     def run(self, game_map, stop_event):
-        while not stop_event.is_set():
+        while (not stop_event.is_set()):
             # Random chance to move (approximately 30% chance each cycle)
             if random.random() < 0.3:
                 self.move_randomly(game_map)
