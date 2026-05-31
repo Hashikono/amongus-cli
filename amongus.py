@@ -6,6 +6,7 @@ import ctypes
 import random
 import threading
 
+
 def enable_windows_ansi():
     #initializing a workable variable
     kernel32 = ctypes.windll.kernel32
@@ -112,6 +113,8 @@ mainMap = [
     list("                              +-------------------+------------------+"),
 ]
 
+allowedChar = [" ","v"]
+
 class Player:
     def __init__(self, name, y_coor, x_coor):
         self.y = y_coor
@@ -136,7 +139,7 @@ class Player:
         # Check boundaries and collision
         if (new_y >= 0 and new_y < len(game_map) and 
             new_x >= 0 and new_x < len(game_map[0]) and 
-            (game_map[new_y][new_x] == " " or 
+            (game_map[new_y][new_x] in allowedChar or 
             (game_map[new_y][new_x] in characters and self.role == "imposter"))):
             
             if (game_map[new_y][new_x] in characters and self.role == "imposter"): 
@@ -174,36 +177,34 @@ class NPC:
         directions = ["up", "down", "left", "right"]
         random.shuffle(directions)
         
-        if self.alive == True:
-            for direction in directions:
-                new_y, new_x = self.y, self.x
+        for direction in directions:
+            new_y, new_x = self.y, self.x
+            
+            if direction == "up":
+                new_y -= 1
+            elif direction == "down":
+                new_y += 1
+            elif direction == "left":
+                new_x -= 1
+            elif direction == "right":
+                new_x += 1
+            
+            # Check boundaries and collision
+            if (new_y >= 0 and new_y < len(game_map) and 
+                new_x >= 0 and new_x < len(game_map[0]) and 
+                game_map[new_y][new_x] == " "):
                 
-                if direction == "up":
-                    new_y -= 1
-                elif direction == "down":
-                    new_y += 1
-                elif direction == "left":
-                    new_x -= 1
-                elif direction == "right":
-                    new_x += 1
-                
-                # Check boundaries and collision
-                if (new_y >= 0 and new_y < len(game_map) and 
-                    new_x >= 0 and new_x < len(game_map[0]) and 
-                    game_map[new_y][new_x] == " "):
-                    
-                    # Clear old position
-                    game_map[self.y][self.x] = " "
-                    # Move to new position
-                    self.y, self.x = new_y, new_x
-                    # Place name at new position
-                    game_map[self.y][self.x] = self.name
-                    return True
+                # Clear old position
+                game_map[self.y][self.x] = " "
+                # Move to new position
+                self.y, self.x = new_y, new_x
+                # Place name at new position
+                game_map[self.y][self.x] = self.name
+                return True
         return False
     
     def run(self, game_map, stop_event):
-        while (not stop_event.is_set()):
-            # Random chance to move (approximately 30% chance each cycle)
+        while (not stop_event.is_set()) and self.alive == True:
             if random.random() < 0.3:
                 self.move_randomly(game_map)
             time.sleep(self.move_interval)
@@ -285,13 +286,13 @@ def main():
     view_x = 0
     view_y = 0
     
-    # Stop event for NPC threads
-    stop_event = threading.Event()
-    
     # Start NPC threads
     npc_threads = []
     for npc in npcs_list:
-        thread = npc.start_thread(mainMap, stop_event)
+        if npc.alive == True:
+            thread = npc.start_thread(mainMap, threading.Event())
+        else:
+            thread = npc.start_thread(mainMap, threading.set())
         npc_threads.append(thread)
     
     cont = True
@@ -304,10 +305,10 @@ def main():
             # Draw the view
             draw_view(view_x, view_y, mainMap)
             
-            # Check for player input
+            #Check for player input
             movement = poll_key()
             
-            # Handle player movement
+            #Handle player movement
             if movement == "q":
                 cont = False
             elif movement == "w":
@@ -318,15 +319,11 @@ def main():
                 player.move("left", mainMap)
             elif movement == "d":
                 player.move("right", mainMap)
-            
-            # Small delay to control frame rate
+
             time.sleep(0.03)
     
     finally:
-        # Clean up
-        stop_event.set()  # Signal all NPC threads to stop
-        
-        # Wait for threads to finish (with timeout)
+        #Wait for threads to finish (with timeout)
         for thread in npc_threads:
             thread.join(timeout=0.5)
         
