@@ -6,6 +6,8 @@ import ctypes
 import random
 import threading
 
+#Character declaration
+characters = ["P", "A", "B", "C", "D"]
 
 def enable_windows_ansi():
     #initializing a workable variable
@@ -89,29 +91,63 @@ def poll_key():
 
 #Among us CLI 8x8 grid - autoupdating
 mainMap = [
-    list("+----------------------+----------------------+----------------------+"),
-    list("|                      |                      |                      |"),
-    list("|                      |                      |                      |"),
-    list("|   O    O    O    O   +-----------+----------+                      |"),
-    list("|                               /                                     "),
-    list("+--------+-----------+         /                                     |"),
-    list("        |                     /        +-----------------------------+"),
-    list("        |                                                             "),
-    list("+-------+----------+-------+           +-----------+-----------------+"),
-    list("|                                                                    |"),
-    list("+---   ----+-----   --+-------+                   +------------------+"),
-    list("           |          |                                              |"),
-    list("+--   -----+----   ---+-------------------   ---------+----   -------+"),
-    list("|                             |                       |              |"),
-    list("+-----------------------------+-----------+-      ---+---------------+"),
-    list("                                          |          |----------------"),
-    list("                                          +--     ---+---------------+"),
-    list("                                          |                      |----"),
-    list("                                          +-----    --+---------------"),
-    list("                              +------------+          |--------------+"),
-    list("                              |                                      |"),
-    list("                              +-------------------+------------------+"),
+    list("                                                                    //------------------\\                                                               "),
+    list("                                                                  //----------------------\\                                                             "),
+    list("                                                                //                          \\                                                           "),
+    list("                                                              //                              \\                                                         "),
+    list("                                                            //                                  \\                                                       "),
+    list("                                                           ||                                     \\          //-----\\                                  "),
+    list("                                                           ||         /---\            /---\        \\      //---------\\                                "),
+    list("                //-------------++                          ||         |-O-|            |-O-|         ||    ||           \\                               "),
+    list("               //--------------++                          ||         \---/            \---/         ||    ||             \\                             "),
+    list("              //               ++--------------------------++                                        ++----++              \\                            "),
+    list("             ||                ++--------------------------++                                        ++----++               ||                           "),
+    list("             ||                                                                                                             ||                           "),
+    list("             ||                                                               /---\                                         ||                           "),
+    list("             ||                                                               |-O-|                                         ||                           "),
+    list("             ||                                                               \---/                                         ||                           "),
+    list("             ||                ++--------------++    ++-----++                                       ++------++             ||                           "),
+    list("             ||                ++--------------++    ++-----++                                       ++------++             ||                           "),
+    list("             ||                ||              ||    ||     ||                                       ||       \\-++    ++---++                           "),
+    list("             ++-----++    ++---++           ++-++    ++--++ ||        /---\            /---\         ||        \\++    ++---++                           "),
+    list("   //----++  ++-----++    ++---++           ++-++    ++--++ ||        |-O-|            |-O-|         ||          ||    ||             ++-------\\        "),
+    list(" //------++         ||    ||                ||           || ||        \---/            \---/        //  //----++-++    ++-------++     ++---------\\     "),
+    list("||       ++--++     ||    ||     //----\\   ||           ||  \\                                   //  //------++-++    ++-------++     ||           \\   "),
+    list("||       ++--++     ||    ||    //------\\  ||            \\   \\                               //  //                          ++-----++             \\ "),
+    list("||           ++-----++    ++---++        || ||              \\   \\                           //   //                           ++-----++              ||"),
+    list("||           ++-----++    ++---++        || ||               \\   \\                         //    ||         ++----------++                           ||"),
+    list("||                                       || ||                 \\   \\-------++    ++-------//     ++---------++----------++                           ||"),
+    list("||                                       ||  \\                 \\    \\-----++    ++------//      ++---------++ ++-------++    ++-----++              ||"),
+    list("||                                       ||   \\-----------------||          ||    ||                            ++-------++    ++-----++             // "),
+    list("||                                       ||    \\----------------||          ||    ++----------------------++    ||             ||     ||           //   "),
+    list("||           ++-----++    ++---++        ||                                  ||    ++----------------------++    ||             ||     ++---------//     "),
+    list("||           ++-----++    ++---++        ||                                  ||                            ||    ||    ++-------++     ++-------//       "),
+    list("||       ++--++     ||    ||   ++--------++                                  ||                            ||    ||    ++-------++                       "),
+    list("||       ++--++     ||    ||   ++--------++    ++---------------++           ||    ++-++-++                ||    ||    ||                                "),
+    list(" \\------++         ||    ||                   ++---------------++   //------++    ++-++-++                ||    ||    ||                                "),
+    list("   \\----++  ++-----++    ++---++              ||               // //--------++       || ||                ||    ||    ++---++                           "),
+    list("             ++-----++    ++---++              ||             // //                   || ++---------------//    //     ++---++                           "),
+    list("             ||                ||              ||           //  ||                    || ++--------------//    //           ||                           "),
+    list("             ||                ++----------++  ||           ||  ||                    ||                      //            ||                           "),
+    list("             ||                ++----------++  ||           ||  ||                    ++---------------------++             ||                           "),
+    list("             ||                            ||  ||    ++----//   ||                    ++---------------------++             ||                           "),
+    list("             ||                            ||  ||    ++---//    ||                                                          ||                           "),
+    list("             ||                            ||  ||    ||         ||                                                          ||                           "),
+    list("             ||                ++----++    ++--++    ++---------++                    ++--------++    ++----++              ||                           "),
+    list("             ||                ++----++    ++--++    ++---------++                    ++--------++    ++----++              ||                           "),
+    list("              \\               ||    ||                                               ||        ||    ||    ||             //                            "),
+    list("                \\-------------++    ||                                               ||   ++---++    ++++  ||            //                             "),
+    list("                  \\-----------++    ||                                               ||   ++---++    ++++  ||           //                              "),
+    list("                                     ++-------------------------++                    ||   ||           ||  ++----------//                               "),
+    list("                                     ++-------------------------++                    ||   ||           ||  ++---------//                                "),
+    list("                                                                  \\                  ||   ||           ||                                               "),
+    list("                                                                    \\                ||   ||           ||                                               "),
+    list("                                                                      \\              ||   ||           ||                                               "),
+    list("                                                                        \\------------++    \\---------//                                                "),
+    list("                                                                          \\----------++     \\-------//                                                 "),
 ]
+
+copyMap = mainMap
 
 allowedChar = [" ","v"]
 
@@ -142,11 +178,18 @@ class Player:
             (game_map[new_y][new_x] in allowedChar or 
             (game_map[new_y][new_x] in characters and self.role == "imposter"))):
             
+            #vent teleportation
+            if (new_y == 4 and new_x == 1):
+                new_y, new_x = 5, 68
+            elif (new_y == 5 and new_x == 67):
+                new_y, new_x = 4, 2
+            
+            #checking to kill NPCs
             if (game_map[new_y][new_x] in characters and self.role == "imposter"): 
                 self.can_kill(game_map[new_y][new_x])
 
             # Clear old position
-            game_map[self.y][self.x] = " "
+            game_map[self.y][self.x] = copyMap[self.y][self.x]
             # Move to new position
             self.y, self.x = new_y, new_x
             # Place name at new position
@@ -154,13 +197,17 @@ class Player:
             return True
         return False
     
-    def can_kill(self, npcs):
+    def can_kill(self, npc_char):
+        # Find and kill the specific NPC
         for n in npcs_list:
-            if n.role == npcs:
+            if n.name == npc_char and n.alive:
                 n.alive = False
-        
-            
-        
+                n.stop_event.set()  # Signal this specific NPC's thread to stop
+                # Remove from map
+                mainMap[n.y][n.x] = " "
+                print(f"\nYou killed {n.name}!")  # Optional feedback
+                return True
+        return False
 
 class NPC:
     def __init__(self, name, y_coor, x_coor, move_interval):
@@ -169,6 +216,7 @@ class NPC:
         self.name = name
         self.move_interval = move_interval
         self.thread = None
+        self.stop_event = None  # Will be set when creating the thread
         self.role = "crewmate"
         self.alive = True
         
@@ -192,10 +240,10 @@ class NPC:
             # Check boundaries and collision
             if (new_y >= 0 and new_y < len(game_map) and 
                 new_x >= 0 and new_x < len(game_map[0]) and 
-                game_map[new_y][new_x] == " "):
+                game_map[new_y][new_x] in allowedChar):
                 
                 # Clear old position
-                game_map[self.y][self.x] = " "
+                game_map[self.y][self.x] = copyMap[self.y][self.x]
                 # Move to new position
                 self.y, self.x = new_y, new_x
                 # Place name at new position
@@ -203,23 +251,28 @@ class NPC:
                 return True
         return False
     
-    def run(self, game_map, stop_event):
-        while (not stop_event.is_set()) and self.alive == True:
+    def run(self, game_map):
+        # Check both stop_event AND alive status
+        while not self.stop_event.is_set() and self.alive:
             if random.random() < 0.3:
                 self.move_randomly(game_map)
             time.sleep(self.move_interval)
     
-    def start_thread(self, game_map, stop_event):
-        # yyyyStart the NPC in a separate thread
-        self.thread = threading.Thread(target=self.run, args=(game_map, stop_event))
+    def start_thread(self, game_map):
+        # Create a dedicated stop event for this NPC
+        self.stop_event = threading.Event()
+        # Start the NPC in a separate thread
+        self.thread = threading.Thread(target=self.run, args=(game_map,))
         self.thread.daemon = True
         self.thread.start()
         return self.thread
     
-    def can_kill(self, charact):
-        for n in npcs_list:
-            if n.role == charact:
-                n.alive = False
+    def stop_thread(self):
+        """Stop this specific NPC's thread"""
+        if self.stop_event:
+            self.stop_event.set()
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=1.0)
 
 def viewpoint(player, view_x, view_y, game_map):
     #vertical camera movement
@@ -272,7 +325,7 @@ def initialize_game():
     
     return player, [npc1, npc2, npc3, npc4]
 
-npcs_list = [];
+npcs_list = []
 def main():
     # Enable ANSI and setup terminal
     enable_windows_ansi()
@@ -280,19 +333,17 @@ def main():
     ansi_hide_cursor()
     
     # Initialize game
+    global npcs_list
     player, npcs_list = initialize_game()
     
     # Camera position
     view_x = 0
     view_y = 0
     
-    # Start NPC threads
+    # Start NPC threads (each with its own stop event)
     npc_threads = []
     for npc in npcs_list:
-        if npc.alive == True:
-            thread = npc.start_thread(mainMap, threading.Event())
-        else:
-            thread = npc.start_thread(mainMap, threading.set())
+        thread = npc.start_thread(mainMap)
         npc_threads.append(thread)
     
     cont = True
@@ -323,9 +374,9 @@ def main():
             time.sleep(0.03)
     
     finally:
-        #Wait for threads to finish (with timeout)
-        for thread in npc_threads:
-            thread.join(timeout=0.5)
+        # Stop ALL NPC threads when game ends
+        for npc in npcs_list:
+            npc.stop_thread()
         
         ansi_show_cursor()
         ansi_move_cursor(25, 1)
