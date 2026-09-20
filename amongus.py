@@ -5,6 +5,7 @@ import msvcrt
 import ctypes
 import random
 import threading
+import copy
 
 #Character declaration
 characters = ["P", "A", "B", "C", "D"]
@@ -147,8 +148,11 @@ mainMap = [
     list(r"                                                                          \\----------++     \\-------//                                                 "),
 ]
 
+#Fixes threading
+map_lock = threading.Lock()
+
 #Deals with active updates
-copyMap = mainMap
+copyMap = copy.deepcopy(mainMap)
 
 #Letters we can step on
 allowedChar = [" ","v"]
@@ -295,9 +299,9 @@ def viewpoint(player, view_x, view_y, game_map):
 def draw_view(view_x, view_y, game_map):
     ansi_move_cursor(1, 1)
     #initialize 8x8 viewpoint
-    for ya in range(view_y, min(view_y + 8, len(game_map))):
+    for ya in range(view_y, min(view_y + 16, len(game_map))):
         row = []
-        for xa in range(view_x, min(view_x + 8, len(game_map[0]))):
+        for xa in range(view_x, min(view_x + 16, len(game_map[0]))):
             row.append(game_map[ya][xa])
         # .ljust(60) makes sure old longer lines get overwritten
         print(" ".join(row).ljust(60))
