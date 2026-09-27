@@ -9,6 +9,7 @@ import copy
 
 #Character declaration
 characters = ["P", "A", "B", "C", "D"]
+ventMenu = False
 
 def enable_windows_ansi():
     #initializing a workable variable
@@ -85,10 +86,35 @@ def poll_key():
         return None
 
     # Only allow keys we care about
-    if k in ["w", "a", "s", "d", "q"]:
+    if k in ["w", "a", "s", "d", "q", "1", "2"]:
         return k
 
     return None
+
+
+def ventMenuEstablish():
+    #moves it off screen and clear everything
+    ansi_move_cursor(1,18)
+    print(" "*67)
+    ansi_move_cursor(1,18)
+    line = "Vent Menu: "
+
+    #show options from vent
+    for opt, destination in enumerate(ventLocationNames, start = 1):
+        line += f"{opt}. {destination}"
+        # easier way than writing this: opt + ". " + destination
+    print(line.ljust(67))
+    #clearing/cleaning the data
+    flush()
+
+def clear_ventMenuEstablish():
+    ansi_move_cursor(1,18)
+    print(" "*67)
+    flush()
+
+def teleportPlayer():
+    with map_lock:
+        #FIXME - Add the teleportation feature
 
 #Among Us Skeld
 mainMap = [
@@ -198,11 +224,9 @@ class Player:
             #vent teleportation:
             coorString = str(new_y) + "," + str(new_x) #coordinate as a string
             if (coorString in ventLocations):
-                if (len(ventLocations[coorString]) > 1):
-                    coorString = "" #FIXME
-                else:
-                    new_y, new_x = ventLocations[coorString][0]
-
+                #opens vent menu when standing one of our established vents
+                global ventMenuEstablish
+                ventMenu = True
             
             #checking to kill NPCs
             if (game_map[new_y][new_x] in characters and self.role == "imposter"): 
