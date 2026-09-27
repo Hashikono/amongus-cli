@@ -245,32 +245,33 @@ class NPC:
     def move_randomly(self, game_map):
         directions = ["up", "down", "left", "right"]
         random.shuffle(directions)
-        
-        for direction in directions:
-            new_y, new_x = self.y, self.x
-            
-            if direction == "up":
-                new_y -= 1
-            elif direction == "down":
-                new_y += 1
-            elif direction == "left":
-                new_x -= 1
-            elif direction == "right":
-                new_x += 1
-            
-            # Check boundaries and collision
-            if (new_y >= 0 and new_y < len(game_map) and 
-                new_x >= 0 and new_x < len(game_map[0]) and 
-                game_map[new_y][new_x] in allowedChar):
+
+        with map_lock:
+            for direction in directions:
+                new_y, new_x = self.y, self.x
                 
-                # Clear old position
-                game_map[self.y][self.x] = copyMap[self.y][self.x]
-                # Move to new position
-                self.y, self.x = new_y, new_x
-                # Place name at new position
-                game_map[self.y][self.x] = self.name
-                return True
-        return False
+                if direction == "up":
+                    new_y -= 1
+                elif direction == "down":
+                    new_y += 1
+                elif direction == "left":
+                    new_x -= 1
+                elif direction == "right":
+                    new_x += 1
+                
+                # Check boundaries and collision
+                if (new_y >= 0 and new_y < len(game_map) and 
+                    new_x >= 0 and new_x < len(game_map[0]) and 
+                    game_map[new_y][new_x] in allowedChar):
+                    
+                    # Clear old position
+                    game_map[self.y][self.x] = copyMap[self.y][self.x]
+                    # Move to new position
+                    self.y, self.x = new_y, new_x
+                    # Place name at new position
+                    game_map[self.y][self.x] = self.name
+                    return True
+            return False
     
     def run(self, game_map):
         # Check both stop_event AND alive status
@@ -344,6 +345,14 @@ def initialize_game():
     mainMap[npc2.y][npc2.x] = npc2.name
     mainMap[npc3.y][npc3.x] = npc3.name
     mainMap[npc4.y][npc4.x] = npc4.name
+
+    #ensures the usage of the globalized copymap
+    global copyMap 
+    copyMap = copy.deepcopy(mainMap)
+    for y in range(len(copyMap)):
+        for x in range(len(copyMap[0])):
+            if copyMap[y][x] in characters:
+                copyMap[y][x] = " "
     
     return player, [npc1, npc2, npc3, npc4]
 
